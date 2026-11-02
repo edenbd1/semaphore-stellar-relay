@@ -14,6 +14,17 @@ proof, consumes the nullifier (one payout per authorization), and transfers the 
 relayer. This is the "why Stellar" edge: native fee-bump (CAP-15) + sponsored reserves
 (CAP-33) make a paying relayer a first-class citizen.
 
+### Two payer-privacy models
+
+1. **Reimbursement pool (this contract):** the relayer pays the fee and claims a tip from a
+   pool, verified against the member's proof. Good when the relayer needs an on-chain incentive.
+2. **Explicit fee-bump:** the member authorizes purely in zero-knowledge (no account, no key)
+   and a distinct relayer wraps the inner tx in a Stellar fee-bump (CAP-15) and pays the fee
+   directly — no reimbursement contract needed. Demonstrated end-to-end on testnet in the
+   [multisig repo](https://github.com/edenbd1/semaphore-stellar-multisig)
+   (`tools/onchain-checkauth/fee-bump.mjs`): the inner source paid `0 XLM`, the relayer paid the
+   fee, tx `18c4a43b…` `SUCCESS`.
+
 ## Contracts
 
 - **`contracts/relay`** — the confidential relay (tip pool, `fund` / `relay` / `pool_balance`).
