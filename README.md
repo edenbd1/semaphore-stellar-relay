@@ -28,12 +28,15 @@ relayer. This is the "why Stellar" edge: native fee-bump (CAP-15) + sponsored re
 ## Contracts
 
 - **`contracts/relay`** — the confidential relay (tip pool, `fund` / `relay` / `pool_balance`).
+- **`contracts/distributor`** — `ConfidentialDistributor`: anonymous, keyless, gasless payouts with
+  a recipient-bound proof and a multi-sponsor pool. The aid / UBI / sybil-resistant-airdrop
+  primitive. See [`DISTRIBUTOR.md`](DISTRIBUTOR.md).
 - **`contracts/verifier`** — vendored Groth16/BN254 verifier (see `VENDORED.md`).
 
 ## Test
 
 ```bash
-cargo test            # 6 tests (verifier 3, relay 3) — real value movement via a SAC token
+cargo test            # 17 tests (verifier 3, relay 5, distributor 9) — real value movement via SAC
 stellar contract build
 ```
 
