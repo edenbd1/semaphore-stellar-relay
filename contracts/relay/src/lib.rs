@@ -19,10 +19,16 @@
 //! exclusive relay). The member only cares that the action executes, anonymously.
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Bytes,
+    contract, contracterror, contractevent, contractimpl, contracttype, token, Address, Bytes,
     BytesN, Env, Vec,
 };
 use semaphore_verifier::verify_encoded;
+
+#[contractevent]
+pub struct Relayed {
+    pub action_digest: BytesN<32>,
+    pub tip: i128,
+}
 
 const R_BE: [u8; 32] = [
     0x30, 0x64, 0x4e, 0x72, 0xe1, 0x31, 0xa0, 0x29, 0xb8, 0x50, 0x45, 0xb6, 0x81, 0x81, 0x58, 0x5d,
@@ -110,7 +116,7 @@ impl ConfidentialRelay {
         let cfg = Self::config(&env)?;
         token::TokenClient::new(&env, &cfg.token).transfer(
             &from,
-            &env.current_contract_address(),
+            env.current_contract_address(),
             &amount,
         );
         Ok(())
@@ -171,7 +177,7 @@ impl ConfidentialRelay {
             &relayer,
             &cfg.tip,
         );
-        env.events().publish((symbol_short!("relayed"), action_digest), cfg.tip);
+        Relayed { action_digest: action_digest.clone(), tip: cfg.tip }.publish(&env);
         Ok(())
     }
 }
@@ -179,6 +185,7 @@ impl ConfidentialRelay {
 #[cfg(test)]
 extern crate std;
 #[cfg(test)]
+#[allow(dead_code)]
 mod fixture;
 #[cfg(test)]
 mod test;
