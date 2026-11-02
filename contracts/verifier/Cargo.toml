@@ -1,0 +1,19 @@
+[package]
+name = "semaphore-verifier"
+version = "0.0.1"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["build-contract"]
+build-contract = []
+
+[dependencies]
+soroban-sdk = "29"
+
+[dev-dependencies]
+soroban-sdk = { version = "29", features = ["testutils"] }

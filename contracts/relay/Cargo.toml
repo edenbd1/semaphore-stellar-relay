@@ -1,0 +1,16 @@
+[package]
+name = "semaphore-relay"
+version = "0.0.1"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = "29"
+semaphore-verifier = { path = "../verifier", default-features = false }
+
+[dev-dependencies]
+soroban-sdk = { version = "29", features = ["testutils"] }
