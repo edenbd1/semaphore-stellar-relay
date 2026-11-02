@@ -10,8 +10,9 @@
 //! unchanged. The milestone this crate proves: a REAL ceremony proof verifies via
 //! `env.crypto().bn254().pairing_check`.
 
+#[cfg(feature = "build-contract")]
+use soroban_sdk::{contract, contractimpl};
 use soroban_sdk::{
-    contract, contractimpl,
     crypto::bn254::{Bn254Fr, Bn254G1Affine, Bn254G2Affine},
     vec, BytesN, Env, Vec,
 };
@@ -21,6 +22,8 @@ extern crate std;
 
 #[cfg(test)]
 mod fixture;
+#[cfg(test)]
+mod fixture_multidepth;
 
 /// Groth16/BN254 verification key. `ic` must have `public_inputs + 1` points.
 pub struct Vk {
@@ -257,5 +260,82 @@ mod test {
             !groth16_verify(&env, &vk, &pub_signals, &a, &b, &c),
             "a proof with a tampered public signal must NOT verify"
         );
+    }
+}
+
+#[cfg(test)]
+mod multidepth_test {
+    use super::*;
+    use crate::fixture_multidepth::*;
+    use soroban_sdk::{vec, BytesN, Env};
+
+    #[allow(clippy::too_many_arguments)]
+    fn verify_case(
+        env: &Env,
+        pubs: [[u8; 32]; 4],
+        a: [u8; 64],
+        b: [u8; 128],
+        c: [u8; 64],
+        al: [u8; 64],
+        be: [u8; 128],
+        ga: [u8; 128],
+        de: [u8; 128],
+        ic: [[u8; 64]; 5],
+    ) -> bool {
+        let p = vec![
+            env,
+            BytesN::from_array(env, &pubs[0]),
+            BytesN::from_array(env, &pubs[1]),
+            BytesN::from_array(env, &pubs[2]),
+            BytesN::from_array(env, &pubs[3]),
+        ];
+        let icv = vec![
+            env,
+            BytesN::from_array(env, &ic[0]),
+            BytesN::from_array(env, &ic[1]),
+            BytesN::from_array(env, &ic[2]),
+            BytesN::from_array(env, &ic[3]),
+            BytesN::from_array(env, &ic[4]),
+        ];
+        verify_encoded(
+            env,
+            &p,
+            &BytesN::from_array(env, &a),
+            &BytesN::from_array(env, &b),
+            &BytesN::from_array(env, &c),
+            &BytesN::from_array(env, &al),
+            &BytesN::from_array(env, &be),
+            &BytesN::from_array(env, &ga),
+            &BytesN::from_array(env, &de),
+            &icv,
+        )
+    }
+
+    /// Real proofs at tree depths 1, 2, 3 and 4 each verify against their own ceremony vkey —
+    /// the verifier is depth-general, not depth-2-only.
+    #[test]
+    fn verifies_depths_1_to_4() {
+        let env = Env::default();
+        assert!(verify_case(&env, [D1_PUB_0, D1_PUB_1, D1_PUB_2, D1_PUB_3], D1_A, D1_B, D1_C,
+            D1_VK_ALPHA, D1_VK_BETA, D1_VK_GAMMA, D1_VK_DELTA,
+            [D1_VK_IC_0, D1_VK_IC_1, D1_VK_IC_2, D1_VK_IC_3, D1_VK_IC_4]), "depth 1");
+        assert!(verify_case(&env, [D2_PUB_0, D2_PUB_1, D2_PUB_2, D2_PUB_3], D2_A, D2_B, D2_C,
+            D2_VK_ALPHA, D2_VK_BETA, D2_VK_GAMMA, D2_VK_DELTA,
+            [D2_VK_IC_0, D2_VK_IC_1, D2_VK_IC_2, D2_VK_IC_3, D2_VK_IC_4]), "depth 2");
+        assert!(verify_case(&env, [D3_PUB_0, D3_PUB_1, D3_PUB_2, D3_PUB_3], D3_A, D3_B, D3_C,
+            D3_VK_ALPHA, D3_VK_BETA, D3_VK_GAMMA, D3_VK_DELTA,
+            [D3_VK_IC_0, D3_VK_IC_1, D3_VK_IC_2, D3_VK_IC_3, D3_VK_IC_4]), "depth 3");
+        assert!(verify_case(&env, [D4_PUB_0, D4_PUB_1, D4_PUB_2, D4_PUB_3], D4_A, D4_B, D4_C,
+            D4_VK_ALPHA, D4_VK_BETA, D4_VK_GAMMA, D4_VK_DELTA,
+            [D4_VK_IC_0, D4_VK_IC_1, D4_VK_IC_2, D4_VK_IC_3, D4_VK_IC_4]), "depth 4");
+    }
+
+    /// A proof at depth 3 must NOT verify against depth 4's vkey (vkeys are depth-specific).
+    #[test]
+    fn wrong_depth_vkey_rejected() {
+        let env = Env::default();
+        assert!(!verify_case(&env, [D3_PUB_0, D3_PUB_1, D3_PUB_2, D3_PUB_3], D3_A, D3_B, D3_C,
+            D4_VK_ALPHA, D4_VK_BETA, D4_VK_GAMMA, D4_VK_DELTA,
+            [D4_VK_IC_0, D4_VK_IC_1, D4_VK_IC_2, D4_VK_IC_3, D4_VK_IC_4]), "cross-depth vkey must fail");
     }
 }
