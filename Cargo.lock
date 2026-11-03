@@ -1387,6 +1387,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semaphore-distributor"
+version = "0.0.1"
+dependencies = [
+ "semaphore-verifier",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "semaphore-relay"
 version = "0.0.1"
 dependencies = [
