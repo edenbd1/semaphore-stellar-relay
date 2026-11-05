@@ -46,4 +46,12 @@ Runs live on testnet with the native XLM SAC pool (see `scripts/`). License: MIT
 
 > ⚠️ **Prototype — unaudited, testnet only.** This code has **not** been audited and runs only
 > on Stellar **testnet** with small fixtures. Do not use it with real value or on mainnet.
+
+### Known limitations
+
+- **Domain separation:** give each deployment a unique scope; don't share `(group root, scope seed)` across contracts, or proofs can be replayed between them.
+- `relay`: `scope_seed` is caller-chosen, so one member can mint a fresh nullifier per scope and collect one tip each — fund the tip pool only to the amount you are willing to pay out. RLN-style per-epoch rate limiting is planned.
+- `relay`: the relayer is an open-market caller — anyone who observes a member's proof can submit it and collect the tip.
+- `distributor`: the admin may recover the remainder only **after** the configured `end_ledger` (anti-rug), but the pool is still admin-custodied; `fund` is permissionless and commingled.
+- No storage-TTL management yet (instance archival can brick a contract until restored).
 > Proofs reuse Ethereum's Semaphore trusted-setup ceremony (no new ceremony is performed).
