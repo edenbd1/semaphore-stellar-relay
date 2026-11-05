@@ -57,6 +57,12 @@ fn is_canonical(v: &BytesN<32>) -> bool {
 }
 
 /// Semaphore's signal hash: `keccak256(x) >> 8` (drop the low byte so the result is < r).
+// Storage TTL (~5s/ledger → ~17280 ledgers/day): keep live entries ~30 days out, bumping when
+// under ~15 days remain, so an active campaign never lets its config, totals or spent-nullifier
+// registry archive (an archived nullifier would reopen the double-claim window).
+const TTL_BUMP: u32 = 518_400; // ~30 days
+const TTL_THRESHOLD: u32 = 259_200; // ~15 days
+
 fn reduce8(env: &Env, bytes: &Bytes) -> BytesN<32> {
     let k = env.crypto().keccak256(bytes).to_array();
     let mut out = [0u8; 32];
@@ -173,6 +179,7 @@ impl ConfidentialDistributor {
         );
         env.storage().instance().set(&DataKey::TotalFunded, &0i128);
         env.storage().instance().set(&DataKey::TotalClaimed, &0i128);
+        env.storage().instance().extend_ttl(TTL_THRESHOLD, TTL_BUMP);
     }
 
     fn config(env: &Env) -> Result<Config, Error> {
@@ -187,6 +194,7 @@ impl ConfidentialDistributor {
         }
         sponsor.require_auth();
         let cfg = Self::config(&env)?;
+        env.storage().instance().extend_ttl(TTL_THRESHOLD, TTL_BUMP);
         token::TokenClient::new(&env, &cfg.token).transfer(
             &sponsor,
             env.current_contract_address(),
@@ -228,6 +236,7 @@ impl ConfidentialDistributor {
         entry: ProofEntry,
     ) -> Result<(), Error> {
         let cfg = Self::config(&env)?;
+        env.storage().instance().extend_ttl(TTL_THRESHOLD, TTL_BUMP);
         if !is_canonical(&entry.nullifier) {
             return Err(Error::NonCanonicalInput);
         }
@@ -267,6 +276,7 @@ impl ConfidentialDistributor {
             return Err(Error::PoolEmpty);
         }
         env.storage().persistent().set(&key, &());
+        env.storage().persistent().extend_ttl(&key, TTL_THRESHOLD, TTL_BUMP);
 
         token_client.transfer(&env.current_contract_address(), &recipient, &cfg.amount);
         let claimed: i128 = env.storage().instance().get(&DataKey::TotalClaimed).unwrap_or(0);

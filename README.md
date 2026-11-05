@@ -53,5 +53,5 @@ Runs live on testnet with the native XLM SAC pool (see `scripts/`). License: MIT
 - `relay`: `scope_seed` is caller-chosen, so one member can mint a fresh nullifier per scope and collect one tip each — fund the tip pool only to the amount you are willing to pay out. RLN-style per-epoch rate limiting is planned.
 - `relay`: the relayer is an open-market caller — anyone who observes a member's proof can submit it and collect the tip.
 - `distributor`: the admin may recover the remainder only **after** the configured `end_ledger` (anti-rug), but the pool is still admin-custodied; `fund` is permissionless and commingled.
-- No storage-TTL management yet (instance archival can brick a contract until restored).
+- Storage TTL is managed: every state-changing call extends the instance config and the relevant persistent entries (spent nullifiers, totals) by ~30 days (bumping when under ~15 days remain), so an actively-used contract never archives. A contract left completely idle past the bump window still needs a one-time Soroban `restore`.
 > Proofs reuse Ethereum's Semaphore trusted-setup ceremony (no new ceremony is performed).
