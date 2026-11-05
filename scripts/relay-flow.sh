@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Confidential relay flow on testnet: deploy (native XLM SAC pool) -> fund -> relay an
 # anonymous member's authorized action, paying the relayer a tip. Usage: scripts/relay-flow.sh [identity]
+#
+# NOTE: this fixture-based flow predates domain separation and no longer works as-is — the scope
+# is now derived on-chain from the DEPLOYED contract address, so the proof must be generated AFTER
+# deploy (bound to that address). Use the deploy-then-prove helper tools/live-relay.mjs instead
+# (see TESTNET-LIVE-STATUS in the plan notes for the exact steps). Kept for reference.
 set -euo pipefail
 IDENTITY="${1:-semaphore-dev}"
 cd "$(dirname "$0")/.."
