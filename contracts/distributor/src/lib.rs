@@ -28,8 +28,8 @@
 //! per-sponsor→claim mapping.
 
 use soroban_sdk::{
-    contract, contracterror, contractevent, contractimpl, contracttype, token, xdr::ToXdr,
-    Address, Bytes, BytesN, Env, Vec,
+    contract, contracterror, contractevent, contractimpl, contracttype, panic_with_error, token,
+    xdr::ToXdr, Address, Bytes, BytesN, Env, Vec,
 };
 use semaphore_verifier::verify_encoded;
 
@@ -85,6 +85,8 @@ pub enum Error {
     AlreadyClaimed = 4,
     PoolEmpty = 5,
     NotAdmin = 6,
+    InvalidAmount = 7,
+    CampaignNotEnded = 8,
 }
 
 #[contracttype]
@@ -115,6 +117,10 @@ pub struct Config {
     pub amount: i128,
     pub scope_seed: BytesN<32>,
     pub vk: VkData,
+    /// Ledger at/after which the admin may `close` and recover the remainder. Before it, the
+    /// admin cannot drain the commingled pool, so sponsors and eligible members are protected
+    /// against a mid-campaign rug.
+    pub end_ledger: u32,
 }
 
 #[contracttype]
@@ -142,10 +148,15 @@ impl ConfidentialDistributor {
         amount: i128,
         scope_seed: BytesN<32>,
         vk: VkData,
+        end_ledger: u32,
     ) {
+        // A non-positive payout would brick every claim (the SAC transfer traps).
+        if amount <= 0 {
+            panic_with_error!(&env, Error::InvalidAmount);
+        }
         env.storage().instance().set(
             &DataKey::Config,
-            &Config { admin, root, depth, token, amount, scope_seed, vk },
+            &Config { admin, root, depth, token, amount, scope_seed, vk, end_ledger },
         );
         env.storage().instance().set(&DataKey::TotalFunded, &0i128);
         env.storage().instance().set(&DataKey::TotalClaimed, &0i128);
@@ -158,6 +169,9 @@ impl ConfidentialDistributor {
     /// Deposit into the commingled pool. Any number of sponsors may call this; payouts are not
     /// linkable to any one sponsor (see module docs).
     pub fn fund(env: Env, sponsor: Address, amount: i128) -> Result<(), Error> {
+        if amount <= 0 {
+            return Err(Error::InvalidAmount);
+        }
         sponsor.require_auth();
         let cfg = Self::config(&env)?;
         token::TokenClient::new(&env, &cfg.token).transfer(
@@ -248,10 +262,15 @@ impl ConfidentialDistributor {
         Ok(())
     }
 
-    /// Admin recovers the unclaimed remainder once a campaign is over.
+    /// Admin recovers the unclaimed remainder once a campaign is over. Gated on `end_ledger`:
+    /// before that ledger the admin cannot withdraw, so the commingled pool cannot be rugged
+    /// mid-campaign. Eligible members have until `end_ledger` to claim.
     pub fn close(env: Env, to: Address) -> Result<i128, Error> {
         let cfg = Self::config(&env)?;
         cfg.admin.require_auth();
+        if env.ledger().sequence() < cfg.end_ledger {
+            return Err(Error::CampaignNotEnded);
+        }
         let token_client = token::TokenClient::new(&env, &cfg.token);
         let bal = token_client.balance(&env.current_contract_address());
         if bal > 0 {

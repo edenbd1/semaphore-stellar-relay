@@ -243,6 +243,14 @@
                           },
                           {
                             "key": {
+                              "symbol": "end_ledger"
+                            },
+                            "val": {
+                              "u32": 0
+                            }
+                          },
+                          {
+                            "key": {
                               "symbol": "root"
                             },
                             "val": {

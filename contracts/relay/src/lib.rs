@@ -19,8 +19,8 @@
 //! exclusive relay). The member only cares that the action executes, anonymously.
 
 use soroban_sdk::{
-    contract, contracterror, contractevent, contractimpl, contracttype, token, Address, Bytes,
-    BytesN, Env, Vec,
+    contract, contracterror, contractevent, contractimpl, contracttype, panic_with_error, token,
+    Address, Bytes, BytesN, Env, Vec,
 };
 use semaphore_verifier::verify_encoded;
 
@@ -52,6 +52,8 @@ pub enum Error {
     NonCanonicalInput = 2,
     InvalidProof = 3,
     AlreadyRelayed = 4,
+    PoolEmpty = 5,
+    InvalidAmount = 6,
 }
 
 #[contracttype]
@@ -101,6 +103,10 @@ impl ConfidentialRelay {
         tip: i128,
         vk: VkData,
     ) {
+        // A non-positive tip would brick every relay (the SAC transfer traps) or be meaningless.
+        if tip <= 0 {
+            panic_with_error!(&env, Error::InvalidAmount);
+        }
         env.storage()
             .instance()
             .set(&DataKey::Config, &Config { root, depth, token, tip, vk });
@@ -112,6 +118,9 @@ impl ConfidentialRelay {
 
     /// Fund the tip pool.
     pub fn fund(env: Env, from: Address, amount: i128) -> Result<(), Error> {
+        if amount <= 0 {
+            return Err(Error::InvalidAmount);
+        }
         from.require_auth();
         let cfg = Self::config(&env)?;
         token::TokenClient::new(&env, &cfg.token).transfer(
@@ -169,14 +178,19 @@ impl ConfidentialRelay {
         if env.storage().persistent().has(&key) {
             return Err(Error::AlreadyRelayed);
         }
+
+        // Check the pool can cover the tip BEFORE consuming the nullifier, so an empty pool
+        // returns a clean error and leaves the proof reusable once the pool is refunded,
+        // rather than trapping on the transfer.
+        let token_client = token::TokenClient::new(&env, &cfg.token);
+        if token_client.balance(&env.current_contract_address()) < cfg.tip {
+            return Err(Error::PoolEmpty);
+        }
+
         env.storage().persistent().set(&key, &());
 
         relayer.require_auth();
-        token::TokenClient::new(&env, &cfg.token).transfer(
-            &env.current_contract_address(),
-            &relayer,
-            &cfg.tip,
-        );
+        token_client.transfer(&env.current_contract_address(), &relayer, &cfg.tip);
         Relayed { action_digest: action_digest.clone(), tip: cfg.tip }.publish(&env);
         Ok(())
     }

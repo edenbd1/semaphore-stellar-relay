@@ -1,7 +1,8 @@
 use crate::fixture::*;
 use crate::{ConfidentialDistributor, ConfidentialDistributorClient, Error, ProofEntry, VkData};
 use soroban_sdk::{
-    testutils::Address as _, token, vec, Address, BytesN, Env, String as SString,
+    testutils::{Address as _, Ledger as _},
+    token, vec, Address, BytesN, Env, String as SString,
 };
 
 const AMOUNT: i128 = 100;
@@ -74,6 +75,7 @@ fn setup(fund: bool) -> Ctx {
             AMOUNT,
             BytesN::from_array(&env, &SCOPE_SEED),
             vk(&env),
+            0u32, // end_ledger = 0: close allowed immediately for most tests
         ),
     );
     if fund {
@@ -199,4 +201,34 @@ fn close_returns_remainder() {
     assert_eq!(returned, POOL - AMOUNT);
     assert_eq!(bal(&ctx, &treasury), before + POOL - AMOUNT);
     assert_eq!(ctx.client.pool_balance(), 0);
+}
+
+/// The admin cannot drain the commingled pool before the campaign's declared end ledger
+/// (anti-rug), but can recover the remainder afterwards.
+#[test]
+fn close_before_end_ledger_rejected() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let sac = env.register_stellar_asset_contract_v2(Address::generate(&env));
+    let token = sac.address();
+    let future = env.ledger().sequence() + 1000;
+    let id = env.register(
+        ConfidentialDistributor,
+        (
+            Address::generate(&env),
+            BytesN::from_array(&env, &ROOT),
+            2u32,
+            token.clone(),
+            AMOUNT,
+            BytesN::from_array(&env, &SCOPE_SEED),
+            vk(&env),
+            future,
+        ),
+    );
+    token::StellarAssetClient::new(&env, &token).mint(&id, &POOL);
+    let client = ConfidentialDistributorClient::new(&env, &id);
+    let treasury = Address::generate(&env);
+    assert_eq!(client.try_close(&treasury), Err(Ok(Error::CampaignNotEnded)));
+    env.ledger().set_sequence_number(future);
+    assert_eq!(client.close(&treasury), POOL);
 }
