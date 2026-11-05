@@ -25,6 +25,21 @@ mod fixture;
 #[cfg(test)]
 mod fixture_multidepth;
 
+/// BN254 scalar field order `r`, big-endian. Public inputs must be canonical (`< r`): the host
+/// silently reduces a 32-byte scalar mod `r`, so a non-canonical encoding (`n + r`) of a nullifier
+/// or root verifies the SAME proof yet differs as raw bytes. A consumer that keys a replay guard on
+/// those bytes would then be bypassable. We reject non-canonical signals here so every consumer of
+/// this library is safe by default, not just the ones that remember to check.
+const R_BE: [u8; 32] = [
+    0x30, 0x64, 0x4e, 0x72, 0xe1, 0x31, 0xa0, 0x29, 0xb8, 0x50, 0x45, 0xb6, 0x81, 0x81, 0x58, 0x5d,
+    0x28, 0x33, 0xe8, 0x48, 0x79, 0xb9, 0x70, 0x91, 0x43, 0xe1, 0xf5, 0x93, 0xf0, 0x00, 0x00, 0x01,
+];
+
+/// True iff `v` (big-endian) is a canonical field element, i.e. `v < r`.
+pub fn is_canonical(v: &BytesN<32>) -> bool {
+    v.to_array() < R_BE
+}
+
 /// Groth16/BN254 verification key. `ic` must have `public_inputs + 1` points.
 pub struct Vk {
     pub alpha: Bn254G1Affine,
@@ -85,6 +100,12 @@ pub fn verify_encoded(
 ) -> bool {
     let mut signals = Vec::new(env);
     for s in pub_signals.iter() {
+        // Reject non-canonical inputs (>= r) rather than let the host reduce them: otherwise
+        // `n` and `n + r` are two byte encodings of the same proof, which breaks raw-bytes
+        // replay guards downstream (see R_BE).
+        if !is_canonical(&s) {
+            return false;
+        }
         signals.push_back(Bn254Fr::from_bytes(s));
     }
     let mut ic = Vec::new(env);
