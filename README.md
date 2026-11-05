@@ -49,7 +49,7 @@ Runs live on testnet with the native XLM SAC pool (see `scripts/`). License: MIT
 
 ### Known limitations
 
-- **Domain separation:** give each deployment a unique scope; don't share `(group root, scope seed)` across contracts, or proofs can be replayed between them.
+- **Domain separation (enforced):** `relay` and `distributor` derive their scope **on-chain from the contract's own address** (`domain_scope_hash` = `keccak256(ascii(contract_strkey) ‖ scope_seed) >> 8`), so an authorization minted for one deployment **cannot** be replayed against another that shares a group root. Each has a `rejects_cross_contract_replay` test proving this against a real ceremony proof.
 - `relay`: `scope_seed` is caller-chosen, so one member can mint a fresh nullifier per scope and collect one tip each — fund the tip pool only to the amount you are willing to pay out. RLN-style per-epoch rate limiting is planned.
 - `relay`: the relayer is an open-market caller — anyone who observes a member's proof can submit it and collect the tip.
 - `distributor`: the admin may recover the remainder only **after** the configured `end_ledger` (anti-rug), but the pool is still admin-custodied; `fund` is permissionless and commingled.

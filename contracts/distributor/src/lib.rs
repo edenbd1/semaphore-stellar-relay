@@ -67,6 +67,19 @@ fn semaphore_hash(env: &Env, value: &BytesN<32>) -> BytesN<32> {
     reduce8(env, &Bytes::from(value.clone()))
 }
 
+/// Domain-separated campaign scope: fold the distributor's OWN contract address into the scope
+/// so a claim proof minted for this campaign cannot be replayed against another distributor that
+/// shares the group root. The prover binds `scope` to
+/// `keccak256( ascii(contract_strkey) || scope_seed )` (then `>> 8`); we recompute it here from
+/// `env.current_contract_address()`, which no other contract can forge.
+fn domain_scope_hash(env: &Env, scope_seed: &BytesN<32>) -> BytesN<32> {
+    let strkey = env.current_contract_address().to_string();
+    let mut preimage = strkey.to_bytes();
+    preimage.append(&Bytes::from(scope_seed.clone()));
+    let rawscope = BytesN::from_array(env, &env.crypto().keccak256(&preimage).to_array());
+    semaphore_hash(env, &rawscope)
+}
+
 /// The field element a proof must carry as its `message` to be payable to `recipient`:
 /// `reduce8(keccak(keccak(recipient_xdr)))`. Off-chain the beneficiary passes
 /// `signal = keccak(recipient_xdr)` to Semaphore, which hashes it to this same value.
@@ -220,7 +233,7 @@ impl ConfidentialDistributor {
         }
 
         let message = recipient_message(&env, &recipient);
-        let scope = semaphore_hash(&env, &cfg.scope_seed);
+        let scope = domain_scope_hash(&env, &cfg.scope_seed);
         let pub_signals = soroban_sdk::vec![
             &env,
             cfg.root.clone(),

@@ -65,7 +65,10 @@ fn setup(fund: bool) -> Ctx {
     let token = sac.address();
     let admin = Address::generate(&env);
 
-    let id = env.register(
+    // Register at the FIXED address the fixture's domain-bound campaign scope was proven
+    // against, so on-chain `current_contract_address()` matches what the prover folded in.
+    let id = env.register_at(
+        &Address::from_string(&SString::from_str(&env, CONTRACT)),
         ConfidentialDistributor,
         (
             admin,
@@ -189,6 +192,38 @@ fn multi_sponsor_pool_commingles() {
     // The recipient was paid by the contract, not by s1 or s2 directly.
     assert_eq!(bal(&ctx, &recipient_a(&ctx.env)), AMOUNT);
     assert_eq!(ctx.client.pool_balance(), 1000 - AMOUNT);
+}
+
+/// Domain separation: the same claim proof presented to a DIFFERENT distributor (identical
+/// group root, same campaign seed, different address) is rejected — the on-chain scope is bound
+/// to the distributor's own address, so a campaign's proofs cannot be replayed across contracts.
+#[test]
+fn rejects_cross_contract_replay() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let token = env
+        .register_stellar_asset_contract_v2(Address::generate(&env))
+        .address();
+    // A second distributor at a DIFFERENT address, same config.
+    let other = env.register(
+        ConfidentialDistributor,
+        (
+            Address::generate(&env),
+            BytesN::from_array(&env, &ROOT),
+            2u32,
+            token.clone(),
+            AMOUNT,
+            BytesN::from_array(&env, &SCOPE_SEED),
+            vk(&env),
+            0u32,
+        ),
+    );
+    token::StellarAssetClient::new(&env, &token).mint(&other, &POOL);
+    let client = ConfidentialDistributorClient::new(&env, &other);
+    let ra = Address::from_string(&SString::from_str(&env, RECIPIENT_A));
+    let err = client.try_claim(&ra, &entry_a(&env)).err().unwrap().unwrap();
+    assert_eq!(err, Error::InvalidProof);
+    assert_eq!(token::TokenClient::new(&env, &token).balance(&ra), 0);
 }
 
 #[test]

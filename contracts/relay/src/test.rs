@@ -45,7 +45,10 @@ fn setup() -> Ctx {
     let sac = env.register_stellar_asset_contract_v2(admin);
     let token = sac.address();
 
-    let id = env.register(
+    // Register at the FIXED address the fixture's domain-bound scope was proven against, so
+    // on-chain `current_contract_address()` matches what the prover folded into the scope.
+    let id = env.register_at(
+        &Address::from_str(&env, CONTRACT),
         ConfidentialRelay,
         (BytesN::from_array(&env, &ROOT), 2u32, token.clone(), TIP, vk(&env)),
     );
@@ -62,7 +65,8 @@ fn setup() -> Ctx {
 fn relays_and_pays_tip() {
     let ctx = setup();
     let payload = BytesN::from_array(&ctx.env, &PAYLOAD);
-    ctx.client.relay(&payload, &payload, &ctx.relayer, &entry_a(&ctx.env));
+    let scope_seed = BytesN::from_array(&ctx.env, &SCOPE_SEED);
+    ctx.client.relay(&payload, &scope_seed, &ctx.relayer, &entry_a(&ctx.env));
 
     let tok = token::TokenClient::new(&ctx.env, &ctx.token);
     assert_eq!(tok.balance(&ctx.relayer), TIP, "relayer paid the tip");
@@ -74,8 +78,9 @@ fn relays_and_pays_tip() {
 fn rejects_double_relay() {
     let ctx = setup();
     let payload = BytesN::from_array(&ctx.env, &PAYLOAD);
-    ctx.client.relay(&payload, &payload, &ctx.relayer, &entry_a(&ctx.env));
-    let again = ctx.client.try_relay(&payload, &payload, &ctx.relayer, &entry_a(&ctx.env));
+    let scope_seed = BytesN::from_array(&ctx.env, &SCOPE_SEED);
+    ctx.client.relay(&payload, &scope_seed, &ctx.relayer, &entry_a(&ctx.env));
+    let again = ctx.client.try_relay(&payload, &scope_seed, &ctx.relayer, &entry_a(&ctx.env));
     assert_eq!(again, Err(Ok(Error::AlreadyRelayed)));
 }
 
@@ -86,9 +91,35 @@ fn rejects_wrong_action() {
     let mut bad = PAYLOAD;
     bad[0] ^= 0xff;
     let action = BytesN::from_array(&ctx.env, &bad);
-    let scope = BytesN::from_array(&ctx.env, &PAYLOAD);
+    let scope = BytesN::from_array(&ctx.env, &SCOPE_SEED);
     let r = ctx.client.try_relay(&action, &scope, &ctx.relayer, &entry_a(&ctx.env));
     assert_eq!(r, Err(Ok(Error::InvalidProof)));
     let tok = token::TokenClient::new(&ctx.env, &ctx.token);
     assert_eq!(tok.balance(&ctx.relayer), 0, "no payout on a bad proof");
+}
+
+/// Domain separation: the same authorization relayed through a DIFFERENT relay contract
+/// (identical group root, same scope seed, different address) is rejected — the on-chain scope
+/// is bound to the relay's own address, so a proof cannot be replayed across relays.
+#[test]
+fn rejects_cross_contract_replay() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let admin = Address::generate(&env);
+    let token = env.register_stellar_asset_contract_v2(admin).address();
+    // A second relay at a DIFFERENT address, same config.
+    let other = env.register_at(
+        &Address::generate(&env),
+        ConfidentialRelay,
+        (BytesN::from_array(&env, &ROOT), 2u32, token.clone(), TIP, vk(&env)),
+    );
+    token::StellarAssetClient::new(&env, &token).mint(&other, &POOL);
+    let client = ConfidentialRelayClient::new(&env, &other);
+    let relayer = Address::generate(&env);
+
+    let payload = BytesN::from_array(&env, &PAYLOAD);
+    let scope_seed = BytesN::from_array(&env, &SCOPE_SEED);
+    let r = client.try_relay(&payload, &scope_seed, &relayer, &entry_a(&env));
+    assert_eq!(r, Err(Ok(Error::InvalidProof)));
+    assert_eq!(token::TokenClient::new(&env, &token).balance(&relayer), 0);
 }

@@ -1,6 +1,6 @@
 {
   "generators": {
-    "address": 4,
+    "address": 3,
     "nonce": 0,
     "mux_id": 0
   },
@@ -36,7 +36,7 @@
               "function_name": "mint",
               "args": [
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                  "address": "CAIHZU5UBVUV5F4BOP5UMFVGNT4GKTQ7GRLXKS4YQURKYLI3XVTJWVFY"
                 },
                 {
                   "i128": "1000"
@@ -50,21 +50,21 @@
     ],
     [
       [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
         {
           "function": {
             "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "contract_address": "CAIHZU5UBVUV5F4BOP5UMFVGNT4GKTQ7GRLXKS4YQURKYLI3XVTJWVFY",
               "function_name": "relay",
               "args": [
                 {
                   "bytes": "2222222222222222222222222222222222222222222222222222222222222222"
                 },
                 {
-                  "bytes": "2222222222222222222222222222222222222222222222222222222222222222"
+                  "bytes": "3333333333333333333333333333333333333333333333333333333333333333"
                 },
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                 },
                 {
                   "map": [
@@ -73,7 +73,7 @@
                         "symbol": "a"
                       },
                       "val": {
-                        "bytes": "232dd029cedc514dd0378767e27f6eafc108f77b770a15e857b157ae03e064942c5845cfa3e30df3b256b85f55bddcc7792b79d417e43ad4e3f630ec69ec652b"
+                        "bytes": "229da832824a4f4db9aed5bde0b11472bbba392a245a0815d98be24aaa0825ad07f0c8016745220ee728b34eaa3248b8f0902e50c52d4e5f2e22e886a4dd7baf"
                       }
                     },
                     {
@@ -81,7 +81,7 @@
                         "symbol": "b"
                       },
                       "val": {
-                        "bytes": "086053f6ec8d1d59b7ddc9d808c31bf7f190198d2a54b404e6ee4889dc9414b5299a0f124f80b9d65c6a04232efa1f066721572a9ebf364cbc0fb4de7e82fb6218d02aa125c6968f927929d6ec2370f7ceb3efcdd79cc87a5149f4abc10f6b2711251a6f9ecb4ab1495b16f0fba2488d6812cfb1109715e3441e66b4445272fb"
+                        "bytes": "06f4a29408d250363541baf89987497cef73ef95119efc703d7c7dcfd047e2860b7fa0be12a37532061765442231fb5b8f3a4aa39bd0358218e2250ca24a773d0204a208d519f9fcaf14d75494da145ee0433a2350b7ce96d8dde417c1ccffdf1ffef544c87bce884a3a406ae9a623523e70198b318c4b23fa2d700989135c75"
                       }
                     },
                     {
@@ -89,7 +89,7 @@
                         "symbol": "c"
                       },
                       "val": {
-                        "bytes": "27ddf11378f021ab8335f28577c2d5751e2d7ea300a4f5ee1dec7a11e681d15f255c57ad2d065fdb5bee3edb572e10962524ee9ef8164cc91eb9c6f5d16dfca7"
+                        "bytes": "0be29cc53efb011ffbb470aa0df0ce6299c7a6e6a1f784644ae235d61ca6ae4b1926176ba5193c8cd3fb7c29e96dc93b0e139f5944d19cbc99502877804030b2"
                       }
                     },
                     {
@@ -97,7 +97,7 @@
                         "symbol": "nullifier"
                       },
                       "val": {
-                        "bytes": "2cf90e10ca0fe48c2f6637f56ae0b5c21971dc4ceb9af6c245b57d652a09a896"
+                        "bytes": "2443a144c0b75273c1419fea014bd36df5dc64915e9602594975559e9524c1d3"
                       }
                     }
                   ]
@@ -190,12 +190,32 @@
               "ext": "v0",
               "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
               "key": {
+                "ledger_key_nonce": {
+                  "nonce": "1033654523790656264"
+                }
+              },
+              "durability": "temporary",
+              "val": "void"
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 6311999
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAIHZU5UBVUV5F4BOP5UMFVGNT4GKTQ7GRLXKS4YQURKYLI3XVTJWVFY",
+              "key": {
                 "vec": [
                   {
                     "symbol": "Nullifier"
                   },
                   {
-                    "bytes": "2cf90e10ca0fe48c2f6637f56ae0b5c21971dc4ceb9af6c245b57d652a09a896"
+                    "bytes": "2443a144c0b75273c1419fea014bd36df5dc64915e9602594975559e9524c1d3"
                   }
                 ]
               },
@@ -213,13 +233,13 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "contract": "CAIHZU5UBVUV5F4BOP5UMFVGNT4GKTQ7GRLXKS4YQURKYLI3XVTJWVFY",
               "key": "ledger_key_contract_instance",
               "durability": "persistent",
               "val": {
                 "contract_instance": {
                   "executable": {
-                    "wasm": "36cb30a16206e339600b3e02e18c499ee8ebafd6221bb78473568e1fe0c2db8b"
+                    "wasm": "ceb026f19046a6a6207bc2dbd74735e56e0ca48cf87ca89d7aeaa330ada4edf7"
                   },
                   "storage": [
                     {
@@ -245,7 +265,7 @@
                               "symbol": "root"
                             },
                             "val": {
-                              "bytes": "2252c7b2058ab23872635cbf7a52732001424729c444ccff3a4756fff6070977"
+                              "bytes": "1510d357e56c2ef79e55558b04341197e61264eb3dc43eb79a48ac51238f3a36"
                             }
                           },
                           {
@@ -347,26 +367,6 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
-              "key": {
-                "ledger_key_nonce": {
-                  "nonce": "1033654523790656264"
-                }
-              },
-              "durability": "temporary",
-              "val": "void"
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 6311999
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
               "contract": "CBEPDNVYXQGWB5YUBXKJWYJA7OXTZW5LFLNO5JRRGE6Z6C5OSUZPCCEL",
               "key": {
                 "vec": [
@@ -386,7 +386,7 @@
                       "symbol": "amount"
                     },
                     "val": {
-                      "i128": "900"
+                      "i128": "100"
                     }
                   },
                   {
@@ -426,7 +426,7 @@
                     "symbol": "Balance"
                   },
                   {
-                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                    "address": "CAIHZU5UBVUV5F4BOP5UMFVGNT4GKTQ7GRLXKS4YQURKYLI3XVTJWVFY"
                   }
                 ]
               },
@@ -438,7 +438,7 @@
                       "symbol": "amount"
                     },
                     "val": {
-                      "i128": "100"
+                      "i128": "900"
                     }
                   },
                   {
@@ -574,8 +574,8 @@
           "data": {
             "contract_code": {
               "ext": "v0",
-              "hash": "36cb30a16206e339600b3e02e18c499ee8ebafd6221bb78473568e1fe0c2db8b",
-              "code": "746573745f636f6e74726163745f666f725f636f6e74726163745f69645f43414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141484b334d"
+              "hash": "ceb026f19046a6a6207bc2dbd74735e56e0ca48cf87ca89d7aeaa330ada4edf7",
+              "code": "746573745f636f6e74726163745f666f725f636f6e74726163745f69645f434149485a55355542565556354634424f5035554d4656474e5434474b54513747524c584b5334595155524b594c49335856544a57564659"
             }
           },
           "ext": "v0"

@@ -1,6 +1,6 @@
 {
   "generators": {
-    "address": 4,
+    "address": 3,
     "nonce": 0,
     "mux_id": 0
   },
@@ -36,7 +36,7 @@
               "function_name": "mint",
               "args": [
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                  "address": "CAIHZU5UBVUV5F4BOP5UMFVGNT4GKTQ7GRLXKS4YQURKYLI3XVTJWVFY"
                 },
                 {
                   "i128": "1000"
@@ -128,13 +128,13 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "contract": "CAIHZU5UBVUV5F4BOP5UMFVGNT4GKTQ7GRLXKS4YQURKYLI3XVTJWVFY",
               "key": "ledger_key_contract_instance",
               "durability": "persistent",
               "val": {
                 "contract_instance": {
                   "executable": {
-                    "wasm": "36cb30a16206e339600b3e02e18c499ee8ebafd6221bb78473568e1fe0c2db8b"
+                    "wasm": "ceb026f19046a6a6207bc2dbd74735e56e0ca48cf87ca89d7aeaa330ada4edf7"
                   },
                   "storage": [
                     {
@@ -160,7 +160,7 @@
                               "symbol": "root"
                             },
                             "val": {
-                              "bytes": "2252c7b2058ab23872635cbf7a52732001424729c444ccff3a4756fff6070977"
+                              "bytes": "1510d357e56c2ef79e55558b04341197e61264eb3dc43eb79a48ac51238f3a36"
                             }
                           },
                           {
@@ -269,7 +269,7 @@
                     "symbol": "Balance"
                   },
                   {
-                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                    "address": "CAIHZU5UBVUV5F4BOP5UMFVGNT4GKTQ7GRLXKS4YQURKYLI3XVTJWVFY"
                   }
                 ]
               },
@@ -417,8 +417,8 @@
           "data": {
             "contract_code": {
               "ext": "v0",
-              "hash": "36cb30a16206e339600b3e02e18c499ee8ebafd6221bb78473568e1fe0c2db8b",
-              "code": "746573745f636f6e74726163745f666f725f636f6e74726163745f69645f43414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141484b334d"
+              "hash": "ceb026f19046a6a6207bc2dbd74735e56e0ca48cf87ca89d7aeaa330ada4edf7",
+              "code": "746573745f636f6e74726163745f666f725f636f6e74726163745f69645f434149485a55355542565556354634424f5035554d4656474e5434474b54513747524c584b5334595155524b594c49335856544a57564659"
             }
           },
           "ext": "v0"

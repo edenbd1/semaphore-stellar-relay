@@ -9,7 +9,8 @@
 //!
 //! On-chain, `relay`:
 //!   1. binds the proof's signal to `action_digest` and scope to `scope_seed`
-//!      (`message = hash(action_digest)`, `scope = hash(scope_seed)`);
+//!      (`message = hash(action_digest)`, `scope = domain_scope_hash(this_contract, scope_seed)`,
+//!      so the authorization is bound to THIS relay and cannot be replayed against another);
 //!   2. verifies the Semaphore proof against the group root + vkey;
 //!   3. consumes the nullifier (one relay per member per scope — no double payout);
 //!   4. pays `tip` from the pool to the relayer (real value movement).
@@ -42,6 +43,19 @@ fn semaphore_hash(env: &Env, value: &BytesN<32>) -> BytesN<32> {
     let mut out = [0u8; 32];
     out[1..32].copy_from_slice(&k[0..31]);
     BytesN::from_array(env, &out)
+}
+
+/// Domain-separated scope: fold the relay's OWN contract address into the scope so an
+/// authorization minted for this relay cannot be replayed against another contract that
+/// shares the same group root. The prover binds `scope` to
+/// `keccak256( ascii(contract_strkey) || scope_seed )` (then `>> 8`); we recompute it here from
+/// `env.current_contract_address()`, which no other contract can forge.
+fn domain_scope_hash(env: &Env, scope_seed: &BytesN<32>) -> BytesN<32> {
+    let strkey = env.current_contract_address().to_string();
+    let mut preimage = strkey.to_bytes();
+    preimage.append(&Bytes::from(scope_seed.clone()));
+    let rawscope = BytesN::from_array(env, &env.crypto().keccak256(&preimage).to_array());
+    semaphore_hash(env, &rawscope)
 }
 
 #[contracterror]
@@ -150,7 +164,7 @@ impl ConfidentialRelay {
         }
 
         let message = semaphore_hash(&env, &action_digest);
-        let scope = semaphore_hash(&env, &scope_seed);
+        let scope = domain_scope_hash(&env, &scope_seed);
         let pub_signals = soroban_sdk::vec![
             &env,
             cfg.root.clone(),
