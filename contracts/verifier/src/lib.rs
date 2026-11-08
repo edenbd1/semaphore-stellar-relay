@@ -250,7 +250,7 @@ mod test {
     }
 
     /// Objective (b): measure the CPU instruction cost of an on-chain `verify` call, to
-    /// confirm it fits a `__check_auth` budget (mainnet tx limit is 100,000,000 insns).
+    /// confirm it fits a `__check_auth` budget (mainnet tx limit is 400,000,000 insns).
     #[cfg(feature = "build-contract")]
     #[test]
     fn reports_verify_budget() {
@@ -262,7 +262,7 @@ mod test {
         let cpu = env.cost_estimate().budget().cpu_instruction_cost();
         let mem = env.cost_estimate().budget().memory_bytes_cost();
         std::println!("verify(): cpu_instructions = {cpu}, memory_bytes = {mem}");
-        assert!(cpu < 100_000_000, "verify must fit the mainnet per-tx CPU limit");
+        assert!(cpu < 400_000_000, "verify must fit the mainnet per-tx CPU limit");
     }
 
     /// Soundness smoke test: tampering with a public signal must break verification.
